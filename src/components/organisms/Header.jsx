@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import Button from "@/components/atoms/Button";
 import ApperIcon from "@/components/ApperIcon";
+import { AuthContext } from "../../App";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { logout } = useContext(AuthContext);
+  const userState = useSelector((state) => state.user);
+  const user = userState?.user;
 
   const navigation = [
     { name: "Browse Properties", href: "/", icon: "Home" },
@@ -15,6 +21,15 @@ const Header = () => {
   ];
 
   const isActive = (href) => location.pathname === href;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Successfully logged out");
+    } catch (error) {
+      toast.error("Logout failed");
+    }
+  };
 
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
@@ -47,6 +62,23 @@ const Header = () => {
               </Link>
             ))}
           </nav>
+
+          {/* Desktop User Menu */}
+          <div className="hidden lg:flex items-center gap-4">
+            {user && (
+              <span className="text-sm text-gray-600">
+                Welcome, {user.firstName || user.name || 'User'}!
+              </span>
+            )}
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              icon="LogOut"
+              className="text-gray-600 hover:text-red-600"
+            >
+              Logout
+            </Button>
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -83,6 +115,23 @@ const Header = () => {
                     {item.name}
                   </Link>
                 ))}
+                <div className="border-t border-gray-100 pt-4 mt-4">
+                  {user && (
+                    <div className="px-4 py-2 text-sm text-gray-600">
+                      Welcome, {user.firstName || user.name || 'User'}!
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-all duration-200 w-full"
+                  >
+                    <ApperIcon name="LogOut" size={20} />
+                    Logout
+                  </button>
+                </div>
               </nav>
             </motion.div>
           )}
